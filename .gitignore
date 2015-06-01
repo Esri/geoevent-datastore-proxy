@@ -1,0 +1,61 @@
+# Java/Maven
+*.class
+*.war
+target/
+buildoutput/
+webapps/
+
+# Eclipse
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Version.java
+Version.java
+
+# Zelix obfuscation
+Z_log.txt
+t
+*.versionsBackup
+*.fbl7
+
+# Visual Studio
+*.suo
+*.sln.docstates
+*.csproj.user
+obj/
+bin/
+
+# Merge artifacts
+*.orig
+
+
+# Passolo projects files
+*.lpu
+
+# js code assist
+*.sdocml
+
+# Binary files
+*.gz
+
+
+dependency-reduced-pom.xml
+
+
