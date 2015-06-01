@@ -54,8 +54,3 @@ bin/
 
 # Binary files
 *.gz
-
-
-dependency-reduced-pom.xml
-
-
