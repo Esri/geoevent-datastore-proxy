@@ -154,3 +154,20 @@ After making modifications to either the arcgisservers.properties file or droppi
 Once you've got the proxy configured, you can point GeoEvent DataStores to use the proxy's endpoints instead of going directly to the ArcGIS Server or Portal.  The screen shots for the rest of this section assume the Tomcat proxy is running at http://localhost:8080/geoevent-datastore-proxy/ (where localhost would be the same machine where GeoEvent is running).
 
 ####javidel
+Here are the configurations for javidel:
+
+![App](javidel.png?raw=true)
+
+####portalhostqa
+Here are the configurations for portalhostqa:
+
+![App](portalhostqa.png?raw=true)
+
+*NOTE: when configuring with GeoEvent 10.2.2 and earlier, you'll need to enter some value for the token when configuring a Portal connection.  You can enter any string here when using the Proxy since the Proxy will replace the token*
+
+####portaliwaqa
+Here are the configurations for portaliwaqa:
+
+![App](portaliwaqa.png?raw=true)
+
+*NOTE: when configuring with GeoEvent 10.2.2 and earlier, you'll need to enter some value for the token when configuring a Portal connection.  You can enter any string here when using the Proxy since the Proxy will replace the token*
