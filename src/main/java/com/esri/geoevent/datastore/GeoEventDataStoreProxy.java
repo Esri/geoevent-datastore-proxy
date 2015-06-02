@@ -138,8 +138,8 @@ public class GeoEventDataStoreProxy
 
 	private static class ServerInfo
 	{
-		URL					url, tokenUrl;
-		AuthScope		authscope;
+		URL				url, tokenUrl;
+		AuthScope	authscope;
 		Credentials	credentials, ntCredentials;
 		HttpContext	httpContext	= null;
 		String			encryptedToken, gisTierUsername, gisTierEncryptedPassword;
@@ -185,19 +185,25 @@ public class GeoEventDataStoreProxy
 							currInfo.ntCredentials = new NTCredentialsEncryptedPassword(username + ":" + encryptedPassword);
 						}
 						currInfo.httpContext = createContextForServer(currInfo);
-						currInfo.tokenUrl = new URL(props.getProperty(currServerName + ".tokenUrl", ""));
-						username = props.getProperty(currServerName+".gisTierUsername", "");
+						String tokenUrlKey = currServerName + ".tokenUrl";
+						String tokenUrl = props.getProperty(tokenUrlKey);
+						if (tokenUrl != null)
+						{
+							currInfo.tokenUrl = new URL(tokenUrl);
+						}
+
+						username = props.getProperty(currServerName + ".gisTierUsername", "");
 						if (!StringUtils.isEmpty(username))
 						{
-							password = props.getProperty(currServerName+".gisTierPassword", "");
+							password = props.getProperty(currServerName + ".gisTierPassword", "");
 							currInfo.gisTierUsername = username;
-							currInfo.gisTierEncryptedPassword = Crypto.doEncrypt(password);							
-						}						
+							currInfo.gisTierEncryptedPassword = Crypto.doEncrypt(password);
+						}
 						serverInfos.put(currServerName, currInfo);
 					}
 					catch (Throwable t)
 					{
-						LOG.log(Level.INFO, "Failed to parse properties for server " + currServerName, t);
+						LOG.log(Level.ALL, "Failed to parse properties for server " + currServerName, t);
 					}
 				}
 			}
@@ -263,7 +269,7 @@ public class GeoEventDataStoreProxy
 		}
 		return sb.toString();
 	}
-	
+
 	private String encodeParam(String param) throws UnsupportedEncodingException
 	{
 		if (StringUtils.isEmpty(param))
@@ -278,7 +284,7 @@ public class GeoEventDataStoreProxy
 		ensureCertsAreLoaded(context);
 		try (CloseableHttpClient http = createHttpClient(serverInfo))
 		{
-			String query = "f=json&username="+encodeParam(serverInfo.gisTierUsername)+"&password="+encodeParam((serverInfo.gisTierEncryptedPassword == null) ? "" : Crypto.doDecrypt(serverInfo.gisTierEncryptedPassword))+"&client=requestip&expiration=60";
+			String query = "f=json&username=" + encodeParam(serverInfo.gisTierUsername) + "&password=" + encodeParam((serverInfo.gisTierEncryptedPassword == null) ? "" : Crypto.doDecrypt(serverInfo.gisTierEncryptedPassword)) + "&client=requestip&expiration=60";
 			serverInfo.encryptedToken = null;
 			HttpPost httpPost = createPostRequest(serverInfo.tokenUrl.toURI(), query, "application/x-www-form-urlencoded", serverInfo);
 			try (CloseableHttpResponse response = http.execute(httpPost, serverInfo.httpContext))
@@ -297,7 +303,7 @@ public class GeoEventDataStoreProxy
 					{
 						message = "No token in response: " + responseString;
 					}
-					LOG.log(Level.INFO, "Could not get token from URL: "+serverInfo.tokenUrl.toExternalForm()+": "+message);
+					LOG.log(Level.INFO, "Could not get token from URL: " + serverInfo.tokenUrl.toExternalForm() + ": " + message);
 					serverInfo.tokenExpiration = Long.MAX_VALUE;
 				}
 				else
@@ -494,7 +500,7 @@ public class GeoEventDataStoreProxy
 
 		return builder.build();
 	}
-	
+
 	private void ensureCertsAreLoaded(MessageContext context)
 	{
 		if (trustedCerts == null)
@@ -517,14 +523,14 @@ public class GeoEventDataStoreProxy
 			throw new IOException(e);
 		}
 	}
-	
+
 	private List<NameValuePair> parseQueryStringAndAddToken(String queryString, String tokenToUse)
 	{
 		List<NameValuePair> params = URLEncodedUtils.parse(queryString, Charset.forName("UTF-8"));
 		if (params != null)
 		{
 			NameValuePair tokenParam = null;
-			for(NameValuePair param : params)
+			for (NameValuePair param : params)
 			{
 				if ("token".equals(param.getName()))
 				{
@@ -541,7 +547,7 @@ public class GeoEventDataStoreProxy
 		{
 			params = new ArrayList<>();
 		}
-		if(tokenToUse != null)
+		if (tokenToUse != null)
 		{
 			params.add(new BasicNameValuePair("token", tokenToUse));
 		}
@@ -573,7 +579,7 @@ public class GeoEventDataStoreProxy
 			if (!StringUtils.isEmpty(queryString))
 			{
 				sb.append('?');
-				
+
 				if (serverInfo.tokenExpiration == null || System.currentTimeMillis() > serverInfo.tokenExpiration)
 				{
 					getTokenForServer(serverInfo, msgContext);
@@ -665,7 +671,7 @@ public class GeoEventDataStoreProxy
 			List<NameValuePair> params = parseQueryStringAndAddToken(postBody, tokenToUse);
 			postBody = URLEncodedUtils.format(params, "UTF-8");
 		}
-		
+
 		StringEntity entity = new StringEntity(postBody, contentType);
 		httpPost.setEntity(entity);
 
