@@ -23,7 +23,7 @@ Building the source code:
 
 Deploying built WAR file:
 
-1. Using an instance of [Tomcat](http://tomcat.apache.org/), copy the file geoevent-datastore-proxy.war to TOMCAT_HOME\webapps
+1. Using an instance of [Tomcat](http://tomcat.apache.org/), copy the generated file target/geoevent-datastore-proxy.war to TOMCAT_HOME\webapps
 2. Run your instance of Tomcat.
   
 ## Configuration
