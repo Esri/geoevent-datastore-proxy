@@ -70,17 +70,17 @@ The base URL that you want to proxy.  Usually http://myhost.com/
 ```
 * &lt;serverName&gt;.tokenUrl
 ```
-The URL where the proxy should POST a request to generate a token.  This must end in with `generateToken` 
+The URL where the proxy should POST a request to generate a token.  This must end with `generateToken` 
 otherwise the POST operation will most likely fail and the proxy will not send any tokens with requests.
 If not present, then the proxy will not append or replace any tokens associated with proxied requests.
 ```
 * &lt;serverName&gt;.username
 ```
-The username to present to server when WebTier authentication is requested.
+The username to present to the server when WebTier authentication is requested.
 ```
 * &lt;serverName&gt;.password
 ```
-The password to present to server when WebTier authentication is requested.
+The password to present to the server when WebTier authentication is requested.
 ```
 * &lt;serverName&gt;.gisTierUsername
 ```
@@ -93,7 +93,7 @@ The password to pass to the generateToken request.
 
 ####Configuration Use Cases
 ##### javidel (Server using GIS Tier authentication with tokens)
-The configuration for javidel is for an ArcGIS Server that uses tokens to protect some of its services.  It is a stand-alone You visit http://javidel:6080/arcgis/rest/info?f=pjson to retrieve the server's information and see the following:
+The configuration for javidel is for an ArcGIS Server that uses tokens to protect some of its services.  It is a stand-alone ArcGIS Server.  You would visit http://javidel:6080/arcgis/rest/info?f=pjson to retrieve the server's information and see the following:
 ```
 {
  "currentVersion": 10.3,
@@ -107,9 +107,9 @@ The configuration for javidel is for an ArcGIS Server that uses tokens to protec
  }
 }
 ```
-From the JSON, we see that the token url is at https://javidel:6443/arcgis/tokens/, but we need to endpoint where we would POST the token request, so we add generateToken to the path.  So the property javidel.tokenURL=https://javidel:6443/arcgis/tokens/generateToken gets set.
+From the JSON, we see that the token url is at https://javidel:6443/arcgis/tokens/, but we need the endpoint where we want to POST the token request, so we add generateToken to the path.  So the property javidel.tokenURL=https://javidel:6443/arcgis/tokens/generateToken gets set.
 
-Since the javidel server does not use WebTier authentiation, we leave the javidel.username and javidel.password entries blank.  Since the tokens are needed for GISTier authenctication, we supply the javidel.gisTierUsername and javidel.gisTierPassword properties.
+Since the javidel server does not use WebTier authentication, we leave the javidel.username and javidel.password entries blank.  Since the tokens are needed for GISTier authentication, we supply the javidel.gisTierUsername and javidel.gisTierPassword properties.
 
 #####portalhostqa (Portal with GIS Tier authentication using tokens)
 The configuration for portalhostqa is for an ArcGIS Portal Server that uses tokens to protect its services.  You visit https://portalhostqa/gis/sharing/rest/info?f=pjson to retrieve the server's information and see the following:
@@ -124,7 +124,7 @@ The configuration for portalhostqa is for an ArcGIS Portal Server that uses toke
 ```
 From the JSON, we see that the token url is at https://portalhostqa/gis/sharing/rest/generateToken. So the property portalhostqa.tokenUrl=https://portalhostqa/gis/sharing/rest/generateToken gets set.
 
-Since the portalhostqa server does not use WebTier authentiation, we leave the portalhostqa.username and portalhostqa.password entries blank.  Since the tokens are needed for GISTier authenctication, we supply the portalhostqal.gisTierUsername and portalhostqa.gisTierPassword properties.
+Since the portalhostqa server does not use WebTier authentication, we leave the portalhostqa.username and portalhostqa.password entries blank.  Since the tokens are needed for GISTier authentication, we supply the portalhostqal.gisTierUsername and portalhostqa.gisTierPassword properties.
 
 ##### portaliwaqa (Portal using WebTier authentication with IWA)
 The configuration for portaliwaqa is for an ArcGIS Portal Server that uses Integrated Windows Authentication (IWA) to protect its services.  You visit https://portaliwaqa/gis/sharing/rest/info?f=pjson to retrieve the server's information and see the following:
@@ -139,7 +139,7 @@ The configuration for portaliwaqa is for an ArcGIS Portal Server that uses Integ
 ```
 From the JSON, we see that the token url is at https://portaliwaqa/gis/sharing/rest/generateToken. So the property portaliwaqa.tokenUrl=https://portaliwaqa/gis/sharing/rest/generateToken gets set.
 
-For this configuration to work, the Tomcat process must be run as a user that has the appropriate access privileges to consume the services since we did not provide username password for neither the WebTier nor the GIS Tier.  The proxy will impersonate the user that is running the Web Application process when communicating with the server in this case.  If the user that is running the process cannot consume the services, then this configuration would need the portaliwaqa.username and portaliwaqa.password properties set to consume the services. IWA enabled Portals return a token as soon as you visit the generateToken endpoint, so there is no need to supply values for the properties portaliwaqa.gisTierUsername andportaliwaqa.gisTierPassword. 
+For this configuration to work, the Tomcat process must be run as a user that has the appropriate access privileges to consume the services since we did not provide neither username nor password for the WebTier nor the GIS Tier.  The proxy will impersonate the user that is running the Web Application process when communicating with the server in this case.  If the user that is running the process cannot consume the services, then this configuration would need the portaliwaqa.username and portaliwaqa.password properties set to consume the services. IWA enabled Portals return a token as soon as you visit the generateToken endpoint, so there is no need to supply values for the properties portaliwaqa.gisTierUsername andportaliwaqa.gisTierPassword. 
 
 ####Certificates
 If any of the sites you're connecting to use self-signed Https certificates, then you can export them using the browser and place them in the directory &lt;TOMCAT&gt;/webapps/geoevent-datastore-proxy/WEB-INF/classes/certificates with the ending of .crt, .cer, or .pem.  Any certificate listed in the directory will be trusted by the proxy when making https connections.
