@@ -224,7 +224,7 @@
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <port>${test.server.port}</port>
-                            <path>/jaxrs-service</path>
+                            <path>/geoevent-datastore-proxy</path>
                             <fork>true</fork>
                             <useSeparateTomcatClassLoader>true</useSeparateTomcatClassLoader>
                         </configuration>

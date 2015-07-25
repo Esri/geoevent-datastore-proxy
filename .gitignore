@@ -54,3 +54,5 @@ bin/
 
 # Binary files
 *.gz
+
+src/test/resources/arcgisservers.properties

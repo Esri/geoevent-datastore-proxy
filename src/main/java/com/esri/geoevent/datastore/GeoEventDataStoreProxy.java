@@ -23,71 +23,17 @@
  */
 package com.esri.geoevent.datastore;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.servlet.ServletContext;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.jaxrs.ext.MessageContext;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.Registry;
@@ -100,11 +46,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.win.WindowsCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.SystemDefaultCredentialsProvider;
-import org.apache.http.impl.client.WinHttpClients;
+import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
@@ -113,6 +55,33 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/")
 public class GeoEventDataStoreProxy
@@ -142,7 +111,7 @@ public class GeoEventDataStoreProxy
 		AuthScope	authscope;
 		Credentials	credentials, ntCredentials;
 		HttpContext	httpContext	= null;
-		String			encryptedToken, gisTierUsername, gisTierEncryptedPassword;
+		String			encryptedToken, gisTierUsername, gisTierEncryptedPassword, name;
 		Long				tokenExpiration;
 	}
 
@@ -199,6 +168,7 @@ public class GeoEventDataStoreProxy
 							currInfo.gisTierUsername = username;
 							currInfo.gisTierEncryptedPassword = Crypto.doEncrypt(password);
 						}
+						currInfo.name=currServerName;
 						serverInfos.put(currServerName, currInfo);
 					}
 					catch (Throwable t)
@@ -282,7 +252,7 @@ public class GeoEventDataStoreProxy
 	synchronized private void getTokenForServer(ServerInfo serverInfo, MessageContext context) throws IOException, URISyntaxException, GeneralSecurityException
 	{
 		ensureCertsAreLoaded(context);
-		try (CloseableHttpClient http = createHttpClient(serverInfo))
+		try (CloseableHttpClient http = createHttpClient())
 		{
 			String query = "f=json&username=" + encodeParam(serverInfo.gisTierUsername) + "&password=" + encodeParam((serverInfo.gisTierEncryptedPassword == null) ? "" : Crypto.doDecrypt(serverInfo.gisTierEncryptedPassword)) + "&client=requestip&expiration=60";
 			serverInfo.encryptedToken = null;
@@ -482,11 +452,14 @@ public class GeoEventDataStoreProxy
 		{
 			builder.header(header.getName(), header.getValue());
 		}
-		builder.entity(EntityUtils.toByteArray(response.getEntity()));
+		String strReply = new String(EntityUtils.toByteArray(response.getEntity()));
+		HttpServletRequest servletRequest = context.getHttpServletRequest();
+		StringBuffer entireRequestUrl = servletRequest.getRequestURL();
+		builder.entity(strReply.replaceAll(serverInfo.url.toExternalForm(), entireRequestUrl.substring(0, entireRequestUrl.indexOf(servletRequest.getPathInfo()))+"/"+serverInfo.name+"/"));
 		return builder.build();
 	}
 
-	private CloseableHttpClient createHttpClient(ServerInfo serverInfo)
+	private CloseableHttpClient createHttpClient()
 	{
 
 		HttpClientBuilder builder = (isWindows) ? WinHttpClients.custom() : HttpClients.custom();
@@ -510,7 +483,7 @@ public class GeoEventDataStoreProxy
 	private Response execute(ServerInfo serverInfo, HttpRequestBase request, MessageContext context) throws IOException
 	{
 		ensureCertsAreLoaded(context);
-		try (CloseableHttpClient http = createHttpClient(serverInfo))
+		try (CloseableHttpClient http = createHttpClient())
 		{
 			return execute(http, serverInfo, request, context);
 		}
